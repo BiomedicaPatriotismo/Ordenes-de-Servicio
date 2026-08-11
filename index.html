@@ -146,11 +146,11 @@ nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(
    ========================================================== */
 window.CONFIG = {
   // URL de la implementación del Apps Script (termina en /exec)
-  PROXY_URL: "https://script.google.com/macros/s/AKfycbw2nV9hEZvzPSIDlCPyHOgjB3JaAK2jkAAQ4aQHFciCUFrcXzPVtgNwPUKrNm9BKMQb/exec",
+  PROXY_URL: "https://script.google.com/macros/s/PEGAR_ID_DE_IMPLEMENTACION/exec",
   // Token compartido: debe ser idéntico al del Apps Script
-  TOKEN: "0129",
+  TOKEN: "CAMBIAR-ESTE-TOKEN",
   FORM_ID: "260445478825062",
-  BUILD: "Rev.02"
+  BUILD: "Rev.03"
 };
 </script>
 
@@ -225,23 +225,44 @@ const Store = (() => {
    2. TRANSPORTE  (JSONP para leer, POST text/plain para enviar)
    ========================================================== */
 const Api = {
-  get(params) {
+  /* Camino 1: fetch directo. Apps Script permite CORS en la respuesta final,
+     así que este funciona desde GitHub Pages y devuelve el error HTTP real.
+     Camino 2 (respaldo): JSONP con <script>, por si una red bloquea el fetch. */
+  viaFetch(params) {
+    const q = new URLSearchParams({ ...params, token: CONFIG.TOKEN });
+    return fetch(`${CONFIG.PROXY_URL}?${q.toString()}`, { redirect: "follow" })
+      .then(async r => {
+        const txt = await r.text();
+        if (!r.ok) { const e = new Error("El proxy respondió HTTP " + r.status); e.servidor = true; throw e; }
+        let d;
+        try { d = JSON.parse(txt); }
+        catch (err) { const e = new Error("Respuesta ilegible del proxy: " + txt.slice(0, 120)); e.servidor = true; throw e; }
+        if (d && d.ok === false) { const e = new Error(d.error || "Error del servidor"); e.servidor = true; throw e; }
+        return d;
+      });
+  },
+  viaJsonp(params) {
     return new Promise((res, rej) => {
       const cb = "jp_" + Math.random().toString(36).slice(2);
       const q = new URLSearchParams({ ...params, token: CONFIG.TOKEN, callback: cb });
       const s = document.createElement("script");
       const limpiar = () => { delete window[cb]; s.remove(); clearTimeout(t); };
-      const t = setTimeout(() => { limpiar(); rej(new Error("Sin respuesta del servidor")); }, 25000);
-      window[cb] = d => { limpiar(); d && d.ok === false ? rej(new Error(d.error || "Error del servidor")) : res(d); };
-      s.onerror = () => {
-        limpiar();
-        rej(new Error(navigator.onLine
-          ? "El proxy no respondió. Revise que la URL /exec sea la de la implementación activa."
-          : "Sin señal. Se reintentará al reconectar."));
-      };
+      const t = setTimeout(() => { limpiar(); rej(new Error("El proxy no respondió a tiempo")); }, 25000);
+      window[cb] = d => { limpiar(); (d && d.ok === false) ? rej(new Error(d.error || "Error del servidor")) : res(d); };
+      s.onerror = () => { limpiar(); rej(new Error("El navegador no pudo cargar el proxy")); };
       s.src = `${CONFIG.PROXY_URL}?${q.toString()}`;
       document.head.appendChild(s);
     });
+  },
+  async get(params) {
+    if (!navigator.onLine) throw new Error("Sin señal. Se reintentará al reconectar.");
+    try {
+      return await Api.viaFetch(params);
+    } catch (e) {
+      if (e.servidor) throw e;              // el proxy contestó: no tiene caso reintentar
+      try { return await Api.viaJsonp(params); }
+      catch (e2) { throw new Error(e2.message + " · fetch: " + e.message); }
+    }
   },
   async post(body) {
     const r = await fetch(CONFIG.PROXY_URL, {
@@ -685,6 +706,20 @@ function MisEnvios({ ingeniero, enviados, cargar, cargando, error }) {
 }
 
 function Ajustes({ ingeniero, salir, esquema, faltantes, mapa, recargar, estadoProxy }) {
+  const [prueba, setPrueba] = useState("");
+  const probar = async () => {
+    setPrueba("Probando…");
+    const url = CONFIG.PROXY_URL + "?action=ping&token=" + encodeURIComponent(CONFIG.TOKEN);
+    let t = "URL usada:\n" + url + "\n\n";
+    try {
+      const r = await fetch(url, { redirect: "follow" });
+      t += "fetch → HTTP " + r.status + "\n" + (await r.text()).slice(0, 200);
+    } catch (e) { t += "fetch → falló: " + e.message; }
+    t += "\n\n";
+    try { await Api.viaJsonp({ action: "ping" }); t += "jsonp → correcto"; }
+    catch (e) { t += "jsonp → falló: " + e.message; }
+    setPrueba(t);
+  };
   return <main>
     <h2>Ajustes</h2>
     <p className="lead">Identidad, conexión y correspondencia de campos con el formulario de Jotform.</p>
@@ -703,6 +738,10 @@ function Ajustes({ ingeniero, salir, esquema, faltantes, mapa, recargar, estadoP
         <button className="btn" onClick={recargar}>Releer formulario</button>
         <button className="btn ghost" onClick={salir}>Cambiar de ingeniero</button>
       </div>
+      <button className="btn ghost block" style={{ marginTop: 10 }} onClick={probar}>Probar conexión</button>
+      {prueba && <pre style={{ marginTop: 10, whiteSpace: "pre-wrap", wordBreak: "break-all",
+        fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6, color: "var(--muted)",
+        background: "#0E1217", border: "1px solid var(--line)", borderRadius: 8, padding: 10 }}>{prueba}</pre>}
     </div>
 
     <h2 style={{ marginTop: 20 }}>Correspondencia de campos</h2>
