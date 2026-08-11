@@ -1,10 +1,9 @@
-/* Service worker: deja la app disponible sin señal. Subir versión al publicar cambios. */
-const CACHE = 'ot-ia-v1';
+/* Service worker · v2
+   HTML y manifest: primero la red (para que una versión nueva llegue siempre).
+   Librerías del CDN: primero la caché (para abrir sin señal). */
+const CACHE = 'ot-ia-v2';
 const BASE = self.registration.scope;
-const PRECARGA = [
-  BASE,
-  BASE + 'index.html',
-  BASE + 'manifest.json',
+const CDN = [
   'https://unpkg.com/react@18/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone@7.24.7/babel.min.js'
@@ -12,25 +11,43 @@ const PRECARGA = [
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
-    await Promise.all(PRECARGA.map(u => c.add(new Request(u, { mode: u.startsWith('http') && !u.startsWith(BASE) ? 'no-cors' : 'same-origin' })).catch(() => {})));
+    await c.add(BASE + 'index.html').catch(() => {});
+    await Promise.all(CDN.map(u => c.add(new Request(u, { mode: 'no-cors' })).catch(() => {})));
     self.skipWaiting();
   }));
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys()
+    .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', e => {
-  const url = e.request.url;
-  if (e.request.method !== 'GET') return;                  // los envíos nunca se cachean
-  if (url.indexOf('script.google.com') !== -1) return;      // el proxy siempre va a la red
-  if (url.indexOf('script.googleusercontent.com') !== -1) return;
-  e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+  const req = e.request, url = req.url;
+  if (req.method !== 'GET') return;
+  if (url.indexOf('script.google') !== -1 || url.indexOf('googleusercontent') !== -1) return;
+
+  const esDocumento = req.mode === 'navigate' ||
+    url.indexOf(BASE) === 0 && /\.(html|json)$/.test(url.split('?')[0]) ||
+    url === BASE;
+
+  if (esDocumento) {                       // red primero, caché de respaldo
+    e.respondWith(
+      fetch(req).then(res => {
+        const copia = res.clone();
+        caches.open(CACHE).then(c => c.put(BASE + 'index.html', copia)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(BASE + 'index.html'))
+    );
+    return;
+  }
+
+  e.respondWith(                            // caché primero para lo demás
+    caches.match(req).then(hit => hit || fetch(req).then(res => {
       const copia = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copia)).catch(() => {});
+      caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {});
       return res;
-    }).catch(() => caches.match(BASE + 'index.html')))
+    }))
   );
 });
