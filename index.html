@@ -146,10 +146,11 @@ nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(
    ========================================================== */
 window.CONFIG = {
   // URL de la implementación del Apps Script (termina en /exec)
-  PROXY_URL: "https://script.google.com/macros/s/AKfycbw2nV9hEZvzPSIDlCPyHOgjB3JaAK2jkAAQ4aQHFciCUFrcXzPVtgNwPUKrNm9BKMQb/exec",
+  PROXY_URL: "https://script.google.com/macros/s/PEGAR_ID_DE_IMPLEMENTACION/exec",
   // Token compartido: debe ser idéntico al del Apps Script
-  TOKEN: "0129",
-  FORM_ID: "260445478825062"
+  TOKEN: "CAMBIAR-ESTE-TOKEN",
+  FORM_ID: "260445478825062",
+  BUILD: "Rev.02"
 };
 </script>
 
@@ -232,7 +233,12 @@ const Api = {
       const limpiar = () => { delete window[cb]; s.remove(); clearTimeout(t); };
       const t = setTimeout(() => { limpiar(); rej(new Error("Sin respuesta del servidor")); }, 25000);
       window[cb] = d => { limpiar(); d && d.ok === false ? rej(new Error(d.error || "Error del servidor")) : res(d); };
-      s.onerror = () => { limpiar(); rej(new Error("No se pudo conectar")); };
+      s.onerror = () => {
+        limpiar();
+        rej(new Error(navigator.onLine
+          ? "El proxy no respondió. Revise que la URL /exec sea la de la implementación activa."
+          : "Sin señal. Se reintentará al reconectar."));
+      };
       s.src = `${CONFIG.PROXY_URL}?${q.toString()}`;
       document.head.appendChild(s);
     });
@@ -687,7 +693,9 @@ function Ajustes({ ingeniero, salir, esquema, faltantes, mapa, recargar, estadoP
       <div className="kv">
         <div><b>Ingeniero:</b> {ingeniero}</div>
         <div><b>Formulario:</b> {CONFIG.FORM_ID}</div>
-        <div><b>Proxy:</b> {estadoProxy}</div>
+        <div><b>Versión de la app:</b> {CONFIG.BUILD || "Rev.01"}</div>
+        <div><b>Proxy en uso:</b> …{String(CONFIG.PROXY_URL).slice(-18)}</div>
+        <div><b>Estado del proxy:</b> {estadoProxy}</div>
         <div><b>Almacenamiento:</b> {Store.modo}</div>
         <div><b>Preguntas leídas:</b> {esquema ? Object.keys(esquema).length : 0}</div>
       </div>
