@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12161C">
+<meta name="theme-color" content="#005DA1">
 <title>Orden de Trabajo · Ingenieros Asociados</title>
 <link rel="manifest" href="manifest.json">
 <style>
@@ -15,15 +15,16 @@
    la app debe abrir igual sin señal.
    ============================================================ */
 :root{
-  --ink:#12161C;
-  --panel:#1B2129;
-  --panel-2:#222A34;
-  --line:#2E3844;
-  --amber:#FFC629;
-  --mint:#35D6A4;
-  --alert:#FF6B5A;
-  --text:#E8EDF2;
-  --muted:#8C99A6;
+  --ink:#06182A;
+  --panel:#0D2740;
+  --panel-2:#133351;
+  --line:#1D4870;
+  --amber:#ABE1F5;      /* celeste del logotipo: acento principal */
+  --azul:#005DA1;       /* azul corporativo */
+  --mint:#5FE0B4;
+  --alert:#FF7A68;
+  --text:#EAF4FB;
+  --muted:#8FAAC4;
   --radius:10px;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -37,7 +38,7 @@ button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* --- Lectura de estado (elemento firma) --- */
-.readout{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#12161C 70%,rgba(18,22,28,.92));border-bottom:1px solid var(--line)}
+.readout{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--ink) 70%,rgba(6,24,42,.92));border-bottom:1px solid var(--line)}
 .readout-top{display:flex;align-items:center;gap:10px;padding:10px 14px 6px}
 .brand{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--text)}
 .brand span{color:var(--amber)}
@@ -66,26 +67,26 @@ input[type=text],input[type=tel],input[type=email],input[type=date],input[type=t
   width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;color:var(--text);appearance:none}
 textarea{min-height:96px;resize:vertical;line-height:1.45}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
-input::placeholder,textarea::placeholder{color:#5D6975}
+input::placeholder,textarea::placeholder{color:#5E7B96}
 
 /* --- Chips (opción múltiple) --- */
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:9px 13px;font-size:13px;cursor:pointer;line-height:1.15;text-align:left}
-.chip[aria-pressed=true]{background:var(--amber);border-color:var(--amber);color:#12161C;font-weight:600}
-.chip.neg[aria-pressed=true]{background:var(--alert);border-color:var(--alert);color:#12161C}
+.chip[aria-pressed=true]{background:var(--amber);border-color:var(--amber);color:#06182A;font-weight:600}
+.chip.neg[aria-pressed=true]{background:var(--alert);border-color:var(--alert);color:#06182A}
 
 /* --- Botones --- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-weight:600;cursor:pointer;font-size:14px}
-.btn.primary{background:var(--amber);border-color:var(--amber);color:#12161C}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#06182A}
 .btn.ghost{background:transparent}
-.btn.danger{color:var(--alert);border-color:#4a2b28}
+.btn.danger{color:var(--alert);border-color:#5A2E29}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.block{width:100%}
 .actions{display:flex;gap:10px;margin-top:6px}
 .actions>.btn{flex:1}
 
 /* --- Firma --- */
-.sigwrap{border:1px solid #C3CBD4;border-radius:8px;background:#F7F9FB;position:relative}
+.sigwrap{border:1px solid #9FC2DC;border-radius:8px;background:#F6FBFE;position:relative}
 .sigwrap canvas{width:100%;height:170px;display:block;touch-action:none;border-radius:8px}
 .sighint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#98A3AF;font-size:12px;letter-spacing:.12em;text-transform:uppercase;pointer-events:none}
 
@@ -107,9 +108,9 @@ table.med input{padding:9px 8px;font-size:14px}
 .item .t{font-weight:600;font-size:14.5px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item .s{font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.5}
 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.tag.ok{color:var(--mint);border-color:#245043}
-.tag.pend{color:var(--amber);border-color:#4d3f16}
-.tag.err{color:var(--alert);border-color:#4a2b28}
+.tag.ok{color:var(--mint);border-color:#1C5347}
+.tag.pend{color:var(--amber);border-color:#1D4870}
+.tag.err{color:var(--alert);border-color:#5A2E29}
 .empty{border:1px dashed var(--line);border-radius:var(--radius);padding:26px 18px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.55}
 
 /* --- Progreso por secciones --- */
@@ -119,15 +120,15 @@ table.med input{padding:9px 8px;font-size:14px}
 .steps b.now{background:var(--amber)}
 
 /* --- Barra inferior --- */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(20,25,32,.97);border-top:1px solid var(--line);display:flex;padding-bottom:var(--safe-b);backdrop-filter:blur(8px)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(9,32,54,.97);border-top:1px solid var(--line);display:flex;padding-bottom:var(--safe-b);backdrop-filter:blur(8px)}
 nav.tabs button{flex:1;background:none;border:0;padding:10px 4px 11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-weight:600;position:relative}
 nav.tabs button[aria-current=page]{color:var(--amber)}
 nav.tabs .ic{font-size:17px;line-height:1}
-nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(--alert);color:#12161C;border-radius:999px;font-size:9px;padding:1px 5px;font-weight:700}
+nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(--alert);color:#06182A;border-radius:999px;font-size:9px;padding:1px 5px;font-weight:700}
 
 /* --- Aviso --- */
-.note{border-left:2px solid var(--amber);background:#211d10;padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.5;margin-bottom:12px;color:#F2E5C0}
-.note.bad{border-color:var(--alert);background:#231715;color:#F5D3CE}
+.note{border-left:2px solid var(--amber);background:#0F2D45;padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.5;margin-bottom:12px;color:#D7EEFA}
+.note.bad{border-color:var(--alert);background:#2B1A18;color:#F8D8D2}
 .toast{position:fixed;left:14px;right:14px;bottom:calc(84px + var(--safe-b));z-index:60;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--mint);border-radius:8px;padding:12px 14px;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.bad{border-left-color:var(--alert)}
 .kv{font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--muted);word-break:break-word}
@@ -146,11 +147,11 @@ nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(
    ========================================================== */
 window.CONFIG = {
   // URL de la implementación del Apps Script (termina en /exec)
-  PROXY_URL: "https://script.google.com/macros/s/AKfycbw2nV9hEZvzPSIDlCPyHOgjB3JaAK2jkAAQ4aQHFciCUFrcXzPVtgNwPUKrNm9BKMQb/exec",
+  PROXY_URL: "https://script.google.com/macros/s/PEGAR_ID_DE_IMPLEMENTACION/exec",
   // Token compartido: debe ser idéntico al del Apps Script
-  TOKEN: "0129",
+  TOKEN: "CAMBIAR-ESTE-TOKEN",
   FORM_ID: "260445478825062",
-  BUILD: "Rev.06"
+  BUILD: "Rev.07"
 };
 </script>
 
@@ -708,7 +709,7 @@ function MisEnvios({ ingeniero, enviados, cargar, cargando, error }) {
     {enviados.map(s => <div className="item" key={s.id} onClick={() => setAbierta(s)} style={{ cursor: "pointer" }}>
       <div className="body">
         <div className="t">{s.equipo || "Equipo"}</div>
-        <div className="s">{s.unidad || "—"} · {s.inventario || "s/inv"}<br />{new Date(s.created_at).toLocaleString("es-MX")}</div>
+        <div className="s">{s.folio ? s.folio + " · " : ""}{s.unidad || "—"} · {s.inventario || "s/inv"}<br />{new Date(s.created_at).toLocaleString("es-MX")}</div>
       </div>
       <span className="tag ok">enviada</span>
     </div>)}
@@ -899,6 +900,8 @@ function App() {
   return <>
     <header className="readout">
       <div className="readout-top">
+        <img src="icon-192.png" alt="" width="26" height="26"
+          style={{ borderRadius: 5, background: "#fff", flexShrink: 0 }} />
         <div className="brand">Orden de <span>Trabajo</span></div>
         <div className="who">{ingeniero.split(" ").slice(0, 2).join(" ")}<br />IA Biomédica</div>
       </div>
