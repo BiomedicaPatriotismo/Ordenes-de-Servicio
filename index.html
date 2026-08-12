@@ -146,11 +146,11 @@ nav.tabs .badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(
    ========================================================== */
 window.CONFIG = {
   // URL de la implementación del Apps Script (termina en /exec)
-  PROXY_URL: "https://script.google.com/macros/s/AKfycbw2nV9hEZvzPSIDlCPyHOgjB3JaAK2jkAAQ4aQHFciCUFrcXzPVtgNwPUKrNm9BKMQb/exec",
+  PROXY_URL: "https://script.google.com/macros/s/PEGAR_ID_DE_IMPLEMENTACION/exec",
   // Token compartido: debe ser idéntico al del Apps Script
-  TOKEN: "0129",
+  TOKEN: "CAMBIAR-ESTE-TOKEN",
   FORM_ID: "260445478825062",
-  BUILD: "Rev.05"
+  BUILD: "Rev.06"
 };
 </script>
 
@@ -335,7 +335,7 @@ const SECCIONES = [
   { k:"detalle", et:"Detalle de funcionalidad", tipo:"area", req:true, m:{ label:"DETALLE DE FUNCIONALIDAD:" } },
 ]},
 { id:"seguimiento", titulo:"Estatus y tecnovigilancia", campos:[
-  { k:"estatus", et:"Estatus de seguimiento", tipo:"checks", m:{ label:"ESTATUS DE SEGUIMIENTO" },
+  { k:"estatus", et:"Estatus de seguimiento", tipo:"checks", m:{ nombre:"escribaUna" },
     opciones:["GARANTÍA","REQUIERE COTIZACIÓN","EN CONTRATO","A PRUEBA POR 8 DÍAS","FUERA DE SERVICIO"], negativas:["FUERA DE SERVICIO"] },
   { k:"falloPaciente", et:"¿Equipo falló con paciente?", tipo:"select", opciones:["Si","No"], m:{ label:"¿EQUIPO FALLÓ CON PACIENTE?" } },
   { k:"danoPaciente",  et:"¿Equipo falló y dañó a paciente?", tipo:"select", opciones:["Si","No"], m:{ label:"¿EQUIPO FALLÓ Y DAÑO A PACIENTE?" } },
@@ -373,12 +373,22 @@ function nuevaOrden(ingeniero) {
 }
 
 /* Resuelve cada campo contra el esquema real del formulario */
+const NO_CAPTURAN = ["control_head", "control_text", "control_button", "control_pagebreak",
+  "control_collapse", "control_divider", "control_image"];
+
 function resolverMapa(preguntas) {
-  const lista = Object.values(preguntas || {}).sort((a, b) => Number(a.order) - Number(b.order));
+  // Los encabezados repiten el texto de la pregunta que anuncian ("ESTATUS DE
+  // SEGUIMIENTO", "INGENIERO DE SERVICIO:"). Si se enlazan, el dato se escribe
+  // en un título y se pierde: por eso quedan fuera de los candidatos.
+  const lista = Object.values(preguntas || {})
+    .filter(q => NO_CAPTURAN.indexOf(q.type) === -1)
+    .sort((a, b) => Number(a.order) - Number(b.order));
   const mapa = {}, faltantes = [];
   TODOS.forEach(c => {
     let cand;
-    if (c.m.prefijo) {
+    if (c.m.nombre) {
+      cand = lista.filter(q => q.name === c.m.nombre);
+    } else if (c.m.prefijo) {
       cand = lista.filter(q => norm(q.text).startsWith(norm(c.m.prefijo)));
     } else {
       const L = norm(c.m.label);
@@ -838,12 +848,13 @@ function App() {
     if (!pend.length) { if (manual) avisar("No hay nada por enviar"); return; }
     if (!esquema) { if (manual) avisar("Primero hay que leer el formulario (Ajustes)", true); return; }
     setEnviando(true);
-    let ok = 0, fail = 0;
+    let ok = 0, fail = 0; const avisos = [];
     for (const o of pend.sort((a, b) => a.creada - b.creada)) {
       try {
         const r = await enviarUno(o);
         await Store.del("outbox", o.id);
         await Store.put("sent", { id: o.id, submissionID: r.submissionID, valores: o.valores, ts: Date.now() });
+        if (r.aviso) avisos.push(r.aviso);
         ok++;
       } catch (e) {
         await Store.put("outbox", { ...o, intentos: (o.intentos || 0) + 1, error: e.message });
@@ -851,7 +862,8 @@ function App() {
       }
     }
     setEnviando(false); await refrescar();
-    if (ok && !fail) avisar(ok === 1 ? "Orden enviada a Jotform" : ok + " órdenes enviadas");
+    if (avisos.length) avisar(avisos[0], true);
+    else if (ok && !fail) avisar(ok === 1 ? "Orden enviada a Jotform" : ok + " órdenes enviadas");
     else if (ok && fail) avisar(`${ok} enviada(s), ${fail} sigue(n) en cola`, true);
     else if (fail) avisar("No se pudo enviar. Queda en cola.", true);
   }, [enviando, esquema, mapa, refrescar]);
